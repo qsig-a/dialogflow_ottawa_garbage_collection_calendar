@@ -41,9 +41,15 @@ function GetPickup(agent) {
                 var url = getPickupEventUrl.concat(place_id,'/services/208?locale=en');
                 axios.get(url)
                 .then((response) => {
+                    var addrname = response.data.next_event.zone.name.toLowerCase();
+                    if (addrname.includes("apartment")) {
+                    message += "This address receives multi-residential containerized garbage and/or containerized recycling collection and this information may not be accurate. ";
+                    }
                 	var itemsJ = response.data.next_event.flags;
                 	var day = response.data.next_event.day;
                   	var pckday = moment.tz(day,"America/Toronto").format('dddd');
+                  	var pckmnth = moment(day).format('MMMM');
+                    var pckdate = moment(day).format('Do');
                     var pck_items = [];
                     for (var key in itemsJ) {
                     	var item =  (itemsJ[key]);
@@ -51,7 +57,7 @@ function GetPickup(agent) {
                         pck_items.push(pck_item.toLowerCase());
                         }
                   	// Adding day of the week and items with and being the seperator between the 2nd last and last item
-                	message = "The next pickup will be on ".concat(pckday,"  and the items will be ",pck_items.join(', ').replace(/, ([^,]*)$/, ' and $1'),".");
+                	message += "The next pickup will be on ".concat(pckday,", ",pckmnth," ",pckdate," and the items will be ",pck_items.join(', ').replace(/, ([^,]*)$/, ' and $1'),".");
 					agent.end(message);
                   	resolve();
                     })
@@ -69,5 +75,6 @@ function GetPickup(agent) {
 }
 let intentMap = new Map();
 intentMap.set('GetPickup', GetPickup);
+intentMap.set('GetPickupProvided',GetPickup);
 agent.handleRequest(intentMap);
 });
